@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
@@ -26,9 +27,13 @@ X_train_selected = selector.fit_transform(X_train, y_train)
 X_test_selected = selector.transform(X_test)
 
 # 標準化數據
-scaler = StandardScaler()
+# 創建 RobustScaler
+scaler = RobustScaler()
+
+# 使用 RobustScaler 來縮放數據
 X_train_scaled = scaler.fit_transform(X_train_selected)
 X_test_scaled = scaler.transform(X_test_selected)
+
 
 # 創建邏輯迴歸分類器
 classifier = LogisticRegression()
