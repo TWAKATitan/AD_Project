@@ -1,0 +1,83 @@
+import numpy as np
+import pandas as pd
+
+from sklearn import metrics
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
+from sklearn.impute import SimpleImputer
+
+import matplotlib.pyplot as plt
+
+data = pd.read_csv("H:\Python\project\ExampleDATA_FDG_SUVR.csv", na_values='--')
+
+
+# 提取特徵和目標
+X = data.iloc[:, 13:]
+y = data['Group']
+# 使用SimpleImputer處理缺失值
+imputer = SimpleImputer(strategy='mean')  # 使用均值填充缺失值
+X = imputer.fit_transform(X)
+
+# 將數據集分為訓練集和測試集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+model = KNeighborsClassifier()
+model.fit(X_train, y_train)
+
+pred = model.predict(X_test)
+print(classification_report(y_test, pred))
+print(model.score(X_test, y_test))
+
+'''
+              precision    recall  f1-score   support
+
+          AD       0.59      0.62      0.60        65
+          CN       0.54      0.74      0.62        87
+         MCI       0.33      0.15      0.20        61
+
+    accuracy                           0.53       213
+   macro avg       0.49      0.50      0.48       213
+weighted avg       0.50      0.53      0.50       213
+
+0.5305164319248826
+
+'''
+
+print("----------------------------------------------------------------")
+
+error_rate = []
+
+for i in range(1,100):
+    model_new = KNeighborsClassifier(n_neighbors=i)
+    model_new.fit(X_train,y_train)
+    pred_i = model_new.predict(X_test)
+    error_rate.append(np.mean(pred_i != y_test))
+
+plt.figure(figsize=(10,6))
+plt.plot(range(1,100),error_rate,color='blue',marker='o', markerfacecolor='red')
+plt.title('Error Rate vs. K Value')
+plt.xlabel('K')
+plt.ylabel('Error Rate')
+plt.show()
+
+model_new = KNeighborsClassifier(n_neighbors=40)
+model_new.fit(X_train, y_train)
+
+pred = model_new.predict(X_test)
+print(classification_report(y_test, pred))
+print(model.score(X_test, y_test))
+
+'''
+              precision    recall  f1-score   support
+
+          AD       0.71      0.52      0.60        65
+          CN       0.56      0.86      0.68        87
+         MCI       0.47      0.25      0.32        61
+
+    accuracy                           0.58       213
+   macro avg       0.58      0.54      0.54       213
+weighted avg       0.58      0.58      0.55       213
+
+0.5305164319248826
+'''
