@@ -6,3 +6,7 @@
 
 #Multi-label Binary Classification Accuracy:  41.78
 #Multi-label Binary Classification F1 Score:  51.39
+
+#LR:CN、MCI Accuracy: 75.18 F1 Score:  74.89
+#MCI、AD:Accuracy: 62.22 F1 Score:  61.33
+#
