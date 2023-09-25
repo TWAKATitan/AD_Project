@@ -1,0 +1,62 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.impute import SimpleImputer
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.neighbors import KNeighborsClassifier  # Import KNN
+
+# 读取Excel文件，将'--'视为缺失值
+data = pd.read_excel('AD2.xlsx', na_values='--')
+
+# 提取特徵和目標
+X = data.iloc[:, 14:]  # Starting from the 6th column as feature variables
+y = data['Group']
+
+# 处理缺失值使用SimpleImputer
+imputer = SimpleImputer(strategy='mean')  # 使用均值填充缺失值
+X = imputer.fit_transform(X)
+
+# 将数据集拆分为训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# 标准化数据
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# 创建SVM分类器并使用最佳参数
+svm_classifier = svm.SVC(C=10, gamma='scale', kernel='poly')
+
+# 创建随机森林分类器
+rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# 创建Logistic Regression分类器
+lr_classifier = LogisticRegression(max_iter=1000)
+
+# 创建KNN分类器
+knn_classifier = KNeighborsClassifier(n_neighbors=3)  # 可根据需要调整n_neighbors参数
+
+# 创建投票分类器，将SVM、随机森林、Logistic Regression和KNN组合在一起
+voting_classifier = VotingClassifier(estimators=[
+    ('svm', svm_classifier), 
+    ('rf', rf_classifier), 
+    ('lr', lr_classifier),
+    ('knn', knn_classifier)], 
+    voting='hard')
+
+# 训练投票分类器
+voting_classifier.fit(X_train_scaled, y_train)
+
+# 使用投票分类器进行预测
+y_pred = voting_classifier.predict(X_test_scaled)
+
+# 计算准确率和F1分数
+accuracy = accuracy_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred, average='weighted')
+
+print('Accuracy: ', "%.2f" % (accuracy * 100))
+print('F1 Score: ', "%.2f" % (f1 * 100))
