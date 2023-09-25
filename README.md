@@ -13,17 +13,7 @@
 #new data:
 LG: Accuracy:  61.21
     F1 Score:  53.56
-    Selected Features:
-    Temporal
-    Cingulum_Post_L
-    Cingulum_Post_R
-    ParaHippocampal_L
-    ParaHippocampal_R
-    Angular_L
-    Angular_R
-    Temporal_Mid_L
-    Temporal_Inf_L
-    Temporal_Inf_R
+    
 #voting:
 svm。rf: Accuracy:  65.45， F1 Score:  63.78
 svm。rf、lr: Accuracy:  66.26，F1 Score:  63.23
