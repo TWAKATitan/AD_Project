@@ -38,7 +38,7 @@ rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 lr_classifier = LogisticRegression(max_iter=1000)
 
 # 创建KNN分类器
-knn_classifier = KNeighborsClassifier(n_neighbors=3)  # 可根据需要调整n_neighbors参数
+knn_classifier = KNeighborsClassifier(n_neighbors=10)  # 可根据需要调整n_neighbors参数
 
 # 创建投票分类器，将SVM、随机森林、Logistic Regression和KNN组合在一起
 voting_classifier = VotingClassifier(estimators=[
