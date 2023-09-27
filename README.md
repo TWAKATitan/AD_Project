@@ -10,3 +10,9 @@ svm。rf、lr、knn: Accuracy： 66.26 F1 Score： 64.65 Precision Score： 65.5
 加上Decision Trees，準確率下降
 
 
+#stacking:
+Accuracy: 68.48
+F1 Score: 66.61
+Precision Score: 68.45
+Recall Score: 68.48
+
