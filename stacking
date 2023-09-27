@@ -1,0 +1,64 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.impute import SimpleImputer
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+
+# Read the Excel file, treating '--' as missing values
+data = pd.read_excel('AD2.xlsx', na_values='--')
+
+# Extract features and target
+X = data.iloc[:, 14:]  # Starting from the 6th column as feature variables
+y = data['Group']
+
+# Handle missing values using SimpleImputer
+imputer = SimpleImputer(strategy='mean')  # Fill missing values with the mean
+X = imputer.fit_transform(X)
+
+# Split the dataset into a training and a testing set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Standardize the data
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Define base classifiers
+svm_classifier = svm.SVC(C=10, gamma='scale', kernel='poly')
+rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+lr_classifier = LogisticRegression(max_iter=10000)
+knn_classifier = KNeighborsClassifier(n_neighbors=10)
+
+# Create a list of base classifiers for stacking
+base_classifiers = [
+    ('svm', svm_classifier),
+    ('rf', rf_classifier),
+    ('lr', lr_classifier),
+    ('knn', knn_classifier)
+]
+
+# Create the stacking ensemble
+stacking_classifier = StackingClassifier(estimators=base_classifiers, final_estimator=lr_classifier)
+
+# Train the stacking classifier
+stacking_classifier.fit(X_train_scaled, y_train)
+
+# Use the stacking classifier for predictions
+y_pred = stacking_classifier.predict(X_test_scaled)
+
+# Calculate accuracy, F1 score, precision, and recall
+accuracy = accuracy_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred, average='weighted')
+precision = precision_score(y_test, y_pred, average='weighted')
+recall = recall_score(y_test, y_pred, average='weighted')
+
+print('Accuracy:', "%.2f" % (accuracy * 100))
+print('F1 Score:', "%.2f" % (f1 * 100))
+print('Precision Score:', "%.2f" % (precision * 100))
+print('Recall Score:', "%.2f" % (recall * 100))
