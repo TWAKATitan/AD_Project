@@ -9,6 +9,8 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier  # 新添加
+from sklearn.tree import DecisionTreeClassifier  # 新添加
 
 # Read the Excel file, treating '--' as missing values
 data = pd.read_excel('AD2.xlsx', na_values='--')
@@ -34,13 +36,17 @@ svm_classifier = svm.SVC(C=10, gamma='scale', kernel='poly')
 rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 lr_classifier = LogisticRegression(max_iter=10000)
 knn_classifier = KNeighborsClassifier(n_neighbors=10)
+gb_classifier = GradientBoostingClassifier(n_estimators=100, random_state=42)  # 新添加
+dt_classifier = DecisionTreeClassifier(random_state=42)  # 新添加
 
 # Create a list of base classifiers for stacking
 base_classifiers = [
     ('svm', svm_classifier),
     ('rf', rf_classifier),
     ('lr', lr_classifier),
-    ('knn', knn_classifier)
+    ('knn', knn_classifier),
+    ('gb', gb_classifier),  # 新添加
+    ('dt', dt_classifier)  # 新添加
 ]
 
 # Create the stacking ensemble
