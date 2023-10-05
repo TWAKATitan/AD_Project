@@ -35,3 +35,9 @@ svm。rf、lr、knn、gb、dt:
     Precision Score: 68.95
     Recall Score: 69.09
 
+#1005
+加上 AUC、圖形 
+MCI切半(依照年齡) 
+搞懂各種模型方法的意義、問題
+
+
