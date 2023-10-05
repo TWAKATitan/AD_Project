@@ -4,7 +4,11 @@ LG: Accuracy: 60.81
     F1 Score: 59.67
     Precision Score: 59.60
     Recall Score: 60.81
-    
+Svm: Accuracy： 65.25
+     F1 Score： 62.46
+     Precision Score： 65.11
+     Recall Score： 65.25
+     
 #voting:
 svm。rf: Accuracy:  65.45 F1 Score:  63.78 Precision Score： 64.90 Recall Score： 65.45
 svm。rf、lr: Accuracy： 66.26 F1 Score： 63.23 Precision Score： 66.85 Recall Score： 66.26
