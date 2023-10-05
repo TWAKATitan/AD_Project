@@ -1,4 +1,3 @@
-
 #new data:
 LG: Accuracy: 60.81
     F1 Score: 59.67
