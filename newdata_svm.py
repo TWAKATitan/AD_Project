@@ -1,4 +1,3 @@
-
 #newdata testing 
 #Accuracy:  65.25
 #ANOVA分析
@@ -10,6 +9,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.metrics import accuracy_score, f1_score
 import shap  # 导入SHAP库
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score  # 引入精确度和召回率的计算
+from sklearn.neighbors import KNeighborsClassifier  # Import KNN
 
 # 读取Excel文件，将'--'视为缺失值
 data = pd.read_excel('newdata.xlsx', na_values='--')
@@ -44,7 +45,11 @@ y_pred = classifier.predict(X_test_scaled)
 # 计算准确率和F1分数
 accuracy = accuracy_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred, average='weighted')
+precision = precision_score(y_test, y_pred, average='weighted')  # 计算精确度
+recall = recall_score(y_test, y_pred, average='weighted')  # 计算召回率
 
-print('Accuracy: ', "%.2f" % (accuracy * 100))
-print('F1 Score: ', "%.2f" % (f1 * 100))
 
+print('Accuracy：', "%.2f" % (accuracy * 100))
+print('F1 Score：', "%.2f" % (f1 * 100))
+print('Precision Score：', "%.2f" % (precision * 100))
+print('Recall Score：', "%.2f" % (recall * 100))
