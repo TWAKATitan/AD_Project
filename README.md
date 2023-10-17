@@ -43,6 +43,7 @@ MCI切半(依照年齡)
 搞懂各種模型方法的意義、問題(找文獻)
 
 #1017
+#stacking
 NC、AD
 資料改動之前:
 Accuracy: 66.67
@@ -56,11 +57,29 @@ F1 Score: 66.89
 Precision Score: 67.15
 Recall Score: 66.92
 
-改動後全選:
+改動後選後半(888 開始):
+Accuracy: 64.66
+F1 Score: 64.43
+Precision Score: 65.45
+Recall Score: 64.66
+
+改動後選後半(889 開始):
+Accuracy: 71.43
+F1 Score: 71.43
+Precision Score: 71.51
+Recall Score: 71.43
+
+改動後MCI全選:
 Accuracy: 70.50
 F1 Score: 65.75
 Precision Score: 69.89
 Recall Score: 70.50
+
+ALL
+Accuracy: 60.00
+F1 Score: 60.05
+Precision Score: 60.37
+Recall Score: 60.00#
 
 
 
