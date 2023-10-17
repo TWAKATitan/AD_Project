@@ -36,8 +36,31 @@ svm。rf、lr、knn、gb、dt:
     Recall Score: 69.09
 
 #1005
+
+
 加上 AUC、圖形 
 MCI切半(依照年齡) 
 搞懂各種模型方法的意義、問題(找文獻)
+
+#1017
+NC、AD
+資料改動之前:
+Accuracy: 66.67
+F1 Score: 66.67
+Precision Score: 66.67
+Recall Score: 66.67
+
+改動後選半:
+Accuracy: 66.92
+F1 Score: 66.89
+Precision Score: 67.15
+Recall Score: 66.92
+
+改動後全選:
+Accuracy: 70.50
+F1 Score: 65.75
+Precision Score: 69.89
+Recall Score: 70.50
+
 
 
