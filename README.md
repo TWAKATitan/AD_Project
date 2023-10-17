@@ -26,7 +26,7 @@ svm。rf、lr、knn、gb、dt:Accuracy： 66.26 F1 Score： 63.99 Precision Scor
 
 
 #stacking:
-svm。rf、lr、knn:
+svm。rf、lr、knn:                                     
     Accuracy: 68.48
     F1 Score: 66.61
     Precision Score: 68.45
@@ -85,10 +85,30 @@ Precision Score: 69.89
 Recall Score: 70.50
 
 ALL
-Accuracy: 60.00
-F1 Score: 60.05
-Precision Score: 60.37
-Recall Score: 60.00#
+全選(MCI後半):
+Accuracy: 67.78
+F1 Score: 67.66
+Precision Score: 67.70
+Recall Score: 67.78
+
+全選(MCI前半):
+Accuracy: 65.65
+F1 Score: 65.80
+Precision Score: 66.07
+Recall Score: 65.65
+
+MCI由大到小:
+Accuracy: 68.48
+F1 Score: 65.62
+Precision Score: 69.01
+Recall Score: 68.48
+
+MCI由小到大:
+Accuracy: 66.26
+F1 Score: 64.37
+Precision Score: 65.69
+Recall Score: 66.26
+#
 
 
 
