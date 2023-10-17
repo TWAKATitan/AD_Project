@@ -1,3 +1,12 @@
+#可能會用到
+device = torch.device("cuda:0")
+y_train = np.array(y_train)
+X_train_scaled = torch.tensor(X_train_scaled, device=device)
+y_train = torch.tensor(y_train, device=device)
+X_train_scaled = X_train_scaled.to(device)
+y_train = y_train.to(device)
+stacking_classifier = stacking_classifier.to(device)
+
 #new data:
 LG: Accuracy: 60.81
     F1 Score: 59.67
