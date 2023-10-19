@@ -110,5 +110,24 @@ Precision Score: 65.69
 Recall Score: 66.26
 #
 
+#兩兩一組(MCI一半):
+NC-MCI:
+Accuracy: 74.91
+F1 Score: 74.91
+Precision Score: 75.38
+Recall Score: 74.91
+
+MCI-AD:
+Accuracy: 83.68
+F1 Score: 83.70
+Precision Score: 83.72
+Recall Score: 83.68
+
+NC-AD:
+Accuracy: 85.59
+F1 Score: 85.61
+Precision Score: 85.63
+Recall Score: 85.59
+
 
 
