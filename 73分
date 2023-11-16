@@ -1,0 +1,57 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn import svm
+from sklearn.impute import SimpleImputer
+
+data = pd.read_excel('AD2.xlsx', na_values='--')
+
+def train_adnc(data):
+    # 選取特定的資料列索引
+    selected_rows = [idx for idx in range(len(data)) if idx in range(1, 308) or idx in range(1336, 1556)]
+    X = data.iloc[selected_rows, 13:] 
+
+    # 使用SimpleImputer處理缺失值
+    imputer = SimpleImputer(strategy='mean')  # 使用平均值填補缺失值
+    X = imputer.fit_transform(X)
+
+    # 資料標準化
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # 創建SVM分類器並使用最佳參數
+    best_params = {'C': 10, 'gamma': 'scale', 'kernel': 'poly'}
+    classifier = svm.SVC(**best_params)
+
+    # 訓練模型
+    classifier.fit(X_scaled, data.iloc[selected_rows]['Group'])
+
+    return classifier, scaler, imputer
+
+def adnc(data1):
+    classifier, scaler, imputer = train_adnc(data)
+
+    # 預測未知資料
+    data1_scaled = scaler.transform(imputer.transform(data1))
+    data1_predictions = classifier.predict(data1_scaled)
+    return data1_predictions
+
+data1 = pd.read_excel('AD2.xlsx', na_values='--')
+selected_rows = [idx for idx in range(len(data)) if idx in range(309, 441)  or idx in range(1067, 1335) or idx in range(1557, 1651)]
+unknown_data = data1.iloc[selected_rows, 13:]
+
+unknown_predictions = adnc(unknown_data)
+
+# 整合預測結果至原始資料
+data1['Group'][selected_rows] = unknown_predictions
+
+# 將資料分割成預測為0和預測為2的兩個資料框
+predicted_data_0 = data1[data1['Group'] == 0]
+predicted_data_2 = data1[data1['Group'] == 2]
+
+# 將Group列的值替換為0和2
+predicted_data_0.loc[:, 'Group'] = 0
+predicted_data_2.loc[:, 'Group'] = 2
+
+# 將資料保存至兩個不同的 Excel 檔案
+predicted_data_0.to_excel('predicted_data_0.xlsx', index=False)
+predicted_data_2.to_excel('predicted_data_2.xlsx', index=False)
