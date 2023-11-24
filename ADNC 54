@@ -1,0 +1,53 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn import svm
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split, cross_val_predict
+
+data = pd.read_excel('AD2.xlsx', na_values='--')
+
+# 將資料分成9成訓練集和1成測試集
+train_indices, test_indices = train_test_split(range(len(data)), test_size=0.1, random_state=42)
+
+def train_adnc(data, train_indices):
+    X = data.iloc[train_indices, 13:]
+
+    imputer = SimpleImputer(strategy='mean')
+    X = imputer.fit_transform(X)
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    best_params = {'C': 10, 'gamma': 'scale', 'kernel': 'poly'}
+    classifier = svm.SVC(**best_params)
+
+    classifier.fit(X_scaled, data.iloc[train_indices]['Group'])
+
+    return classifier, scaler, imputer
+
+def adnc(data, classifier, scaler, imputer):
+    data_scaled = scaler.transform(imputer.transform(data))
+    data_predictions = classifier.predict(data_scaled)
+    return data_predictions
+
+# 訓練模型
+classifier, scaler, imputer = train_adnc(data, train_indices)
+
+# 在測試集上進行預測
+test_data = data.iloc[test_indices, 13:]
+unknown_predictions = adnc(test_data, classifier, scaler, imputer)
+
+# 將預測結果整合至原始資料
+data['Group'].iloc[test_indices] = unknown_predictions
+
+# 分割預測為0和預測為2的資料框
+predicted_data_0 = data[data['Group'] == 0]
+predicted_data_2 = data[data['Group'] == 2]
+
+# 將Group列的值替換為0和2
+predicted_data_0.loc[:, 'Group'] = 0
+predicted_data_2.loc[:, 'Group'] = 2
+
+# 將資料保存至兩個不同的 Excel 檔案
+predicted_data_0.to_excel('predicted_data_0.xlsx', index=False)
+predicted_data_2.to_excel('predicted_data_2.xlsx', index=False)
