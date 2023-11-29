@@ -1,0 +1,106 @@
+import pandas as pd
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from torch.utils.data import DataLoader, TensorDataset
+import shap
+
+class NeuralNet(nn.Module):
+    def __init__(self, input_size, hidden_size, num_classes):
+        super(NeuralNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, hidden_size)  # Additional hidden layer
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(hidden_size, num_classes)  # Additional hidden layer
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        out = self.relu2(out)
+        out = self.fc3(out)
+        return out
+
+# Function to load data from Excel file
+def load_data(file_path):
+    data = pd.read_excel(file_path, na_values='--')
+    return data
+
+# Function to preprocess data
+def preprocess_data(data):
+    X = data.iloc[:, 13:]
+    y = data['Group']
+    
+    imputer = SimpleImputer(strategy='mean')
+    X = imputer.fit_transform(X)
+    
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    return X_scaled, y
+
+# Load and preprocess data
+data = load_data('AD2.xlsx')
+X, y = preprocess_data(data)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Convert data to PyTorch tensors and move to GPU if available
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+X_train_tensor = torch.FloatTensor(X_train).to(device)
+X_test_tensor = torch.FloatTensor(X_test).to(device)
+y_train_tensor = torch.LongTensor(y_train.values).to(device)
+y_test_tensor = torch.LongTensor(y_test.values).to(device)
+
+# Define the neural network parameters
+input_size = X_train_tensor.shape[1]
+hidden_size = 64
+num_classes = len(y.unique())  # Number of unique classes
+
+# Create DataLoader for training data
+batch_size = 64
+train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+# Create the neural network model and move it to GPU
+model = NeuralNet(input_size, hidden_size, num_classes).to(device)
+
+# Define the loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# Train the model
+num_epochs = 300
+for epoch in range(num_epochs):
+    for batch_X, batch_y in train_loader:
+        # Forward pass
+        outputs = model(batch_X)
+        loss = criterion(outputs, batch_y)
+        
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+# Create a DeepExplainer for the PyTorch model
+explainer = shap.DeepExplainer(model.to(device), X_train_tensor)
+
+# Test the model
+with torch.no_grad():
+    outputs = model(X_test_tensor)
+    _, predicted = torch.max(outputs, 1)
+    accuracy = (predicted == y_test_tensor).sum().item() / len(y_test_tensor)
+    f1 = f1_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+    precision = precision_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+    recall = recall_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+
+print('Accuracy: {:.2f}%'.format(accuracy * 100))
+print('F1 Score: {:.2f}%'.format(f1 * 100))
+print('Precision Score: {:.2f}%'.format(precision * 100))
+print('Recall Score: {:.2f}%'.format(recall * 100))
