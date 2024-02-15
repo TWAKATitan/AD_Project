@@ -1,0 +1,200 @@
+import pandas as pd
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from torch.utils.data import DataLoader, TensorDataset
+import shap
+import matplotlib.pyplot as plt
+
+# Neural network definition
+class NeuralNet(nn.Module):
+    def __init__(self, input_size, hidden_size, num_classes):
+        super(NeuralNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(0.25)  # 添加dropout層
+        self.fc2 = nn.Linear(hidden_size, hidden_size )  # 減少隱藏單元數量
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(0.25)  # 添加dropout層
+        self.fc3 = nn.Linear(hidden_size , num_classes)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.relu1(out)
+        out = self.dropout1(out)  # 使用dropout
+        out = self.fc2(out)
+        out = self.relu2(out)
+        out = self.dropout2(out)  # 使用dropout
+        out = self.fc3(out)
+        return out
+
+# Function to load data from CSV file
+def load_data(file_path):
+    data = pd.read_csv(file_path, na_values='--')
+    return data
+
+# Function to preprocess data
+def preprocess_data(data):
+    X = data.iloc[:, 2:]
+    y = data['Group']
+
+    imputer = SimpleImputer(strategy='mean')
+    X = imputer.fit_transform(X)
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    return X_scaled, y
+
+# Load and preprocess data
+data = load_data('new_data.csv')
+X, y = preprocess_data(data)
+
+# Split the dataset into training, validation, and testing sets
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+# Convert data to PyTorch tensors
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+X_train_tensor = torch.FloatTensor(X_train).to(device)
+X_val_tensor = torch.FloatTensor(X_val).to(device)
+X_test_tensor = torch.FloatTensor(X_test).to(device)
+y_train_tensor = torch.LongTensor(y_train.values).to(device)
+y_val_tensor = torch.LongTensor(y_val.values).to(device)
+y_test_tensor = torch.LongTensor(y_test.values).to(device)
+
+# Neural network parameters
+input_size = X_train_tensor.shape[1]
+hidden_size = 64
+num_classes = len(y.unique())
+
+# 設定每個批次的大小為 64
+batch_size = 64
+
+# 創建訓練資料集，將特徵 X_train_tensor 與標籤 y_train_tensor 組成 TensorDataset
+train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+
+# 創建訓練資料載入器，指定批次大小、啟用隨機洗牌
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+# 創建驗證資料集，將特徵 X_val_tensor 與標籤 y_val_tensor 組成 TensorDataset
+val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
+
+# 創建驗證資料載入器，指定批次大小，不啟用隨機洗牌
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+
+# Neural network model
+model = NeuralNet(input_size, hidden_size, num_classes).to(device)
+
+# Loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+best_val_loss = float('inf')
+# Training the model with learning curve tracking
+num_epochs = 300
+train_losses, val_losses = [], []
+train_accuracies, val_accuracies = [], []
+
+best_val_loss = float('inf')
+best_epoch = 0
+patience = 10  # Set a patience for early stopping
+
+# Loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+for epoch in range(num_epochs):
+    model.train()
+    train_loss, train_correct = 0, 0
+    for batch_X, batch_y in train_loader:
+        optimizer.zero_grad()  # Zero the gradient buffers
+        outputs = model(batch_X)  # Get the model outputs
+        loss = criterion(outputs, batch_y)  # Calculate loss
+        train_loss += loss.item()
+        _, predicted = torch.max(outputs, 1)
+        train_correct += (predicted == batch_y).sum().item()
+        loss.backward()  # Backpropagate the errors
+        optimizer.step()  # Update the weights
+
+    # Calculate and store the average training loss and accuracy
+    train_losses.append(train_loss / len(train_loader))
+    train_accuracies.append(100 * train_correct / len(y_train_tensor))
+
+    # Validation phase
+    model.eval()
+    val_loss, val_correct = 0, 0
+    with torch.no_grad():
+        for batch_X, batch_y in val_loader:
+            outputs = model(batch_X)  # Get the model outputs for the validation set
+            loss = criterion(outputs, batch_y)  # Calculate loss
+            val_loss += loss.item()
+            _, predicted = torch.max(outputs, 1)
+            val_correct += (predicted == batch_y).sum().item()
+
+    # Calculate and store the average validation loss and accuracy
+    val_losses.append(val_loss / len(val_loader))
+    val_accuracies.append(100 * val_correct / len(y_val_tensor))
+
+    # Print the metrics for this epoch
+    print(f"Epoch {epoch+1}/{num_epochs}, "
+          f"Training loss: {train_losses[-1]:.4f}, "
+          f"Training accuracy: {train_accuracies[-1]:.2f}%, "
+          f"Validation loss: {val_losses[-1]:.4f}, "
+          f"Validation accuracy: {val_accuracies[-1]:.2f}%")
+
+    # Early stopping check
+    if val_losses[-1] < best_val_loss:
+        best_val_loss = val_losses[-1]
+        best_epoch = epoch
+        torch.save(model.state_dict(), 'best_model_state.pt')  # Save the best model state
+    elif (epoch - best_epoch) >= patience:  # Check if patience has run out
+        print("Validation loss did not improve for {} epochs, stopping training.".format(patience))
+        break
+   # scheduler.step(val_losses[-1])
+
+
+# Load the best model state for further use or evaluation
+model.load_state_dict(torch.load('best_model_state.pt'))
+
+# Create a DeepExplainer for the PyTorch model
+explainer = shap.DeepExplainer(model.to(device), X_train_tensor)
+
+# Test the model
+with torch.no_grad():
+    outputs = model(X_test_tensor)
+    _, predicted = torch.max(outputs, 1)
+    accuracy = (predicted == y_test_tensor).sum().item() / len(y_test_tensor)
+    f1 = f1_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+    precision = precision_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+    recall = recall_score(y_test_tensor.cpu().numpy(), predicted.cpu().numpy(), average='weighted')
+
+print('Accuracy: {:.2f}%'.format(accuracy * 100))
+print('F1 Score: {:.2f}%'.format(f1 * 100))
+print('Precision Score: {:.2f}%'.format(precision * 100))
+print('Recall Score: {:.2f}%'.format(recall * 100))
+# Plotting the learning curves
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(train_losses, label='Training loss')
+plt.plot(val_losses, label='Validation loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(train_accuracies, label='Training accuracy')
+plt.plot(val_accuracies, label='Validation accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.show()
+
