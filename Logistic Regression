@@ -1,17 +1,16 @@
 import pandas as pd
-from sklearn.preprocessing import RobustScaler
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 
 # 讀取Excel文件，將'--'視為缺失值
-data = pd.read_excel('ExampleDATA_FDG_SUVR.xlsx', na_values='--')
+data = pd.read_csv('new_data.csv', na_values='--')
 
 # Extract features and target
-X = data.iloc[:, 13:]  # Starting from the 6th column as feature variables
+X = data.iloc[:, 2:]  # Starting from the 6th column as feature variables
 y = data['Group']
 
 # 處理缺失值使用SimpleImputer
@@ -19,20 +18,18 @@ imputer = SimpleImputer(strategy='mean')  # 使用均值填充缺失值
 X = imputer.fit_transform(X)
 
 # 將數據集拆分為訓練集和測試集
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 特徵選擇 - 使用SelectKBest選擇前k個最重要的特徵
-selector = SelectKBest(score_func=f_classif, k=10)
-X_train_selected = selector.fit_transform(X_train, y_train)
-X_test_selected = selector.transform(X_test)
+
 
 # 標準化數據
-# 創建 RobustScaler
-scaler = RobustScaler()
+# 創建 StandardScaler
+scaler = StandardScaler()
 
-# 使用 RobustScaler 來縮放數據
-X_train_scaled = scaler.fit_transform(X_train_selected)
-X_test_scaled = scaler.transform(X_test_selected)
+# 使用 StandardScaler 來縮放數據
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
 
 # 創建邏輯迴歸分類器
@@ -44,20 +41,13 @@ classifier.fit(X_train_scaled, y_train)
 # 使用模型進行預測
 y_pred = classifier.predict(X_test_scaled)
 
-# 計算準確率和F1分數
+# 計算準確率、F1分數、召回率和精確率
 accuracy = accuracy_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred, average='weighted')
+recall = recall_score(y_test, y_pred, average='weighted')
+precision = precision_score(y_test, y_pred, average='weighted')
 
 print('Accuracy: ', "%.2f" % (accuracy * 100))
 print('F1 Score: ', "%.2f" % (f1 * 100))
-
-# 獲取由模型選擇的特徵的索引
-selected_feature_indices = selector.get_support(indices=True)
-
-# 獲取所選特徵的列名
-selected_feature_names = data.columns[13:][selected_feature_indices]
-
-# 輸出所選特徵的列名
-print("Selected Features:")
-for feature in selected_feature_names:
-    print(feature)
+print('Recall: ', "%.2f" % (recall * 100))
+print('Precision: ', "%.2f" % (precision * 100))
